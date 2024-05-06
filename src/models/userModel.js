@@ -39,11 +39,47 @@ const userSchema = mongoose.Schema({
     },
     status: {
         type:String,
-        default:"Active"
+        default:"Inactive"
     },
 
 },{timestamps : true})
 
 
 
-module.exports = mongoose.model("User",userSchema);
+const userVerificationCodeSchema = new mongoose.Schema({
+    userId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User", 
+      index: true 
+    },
+    email: { 
+      type: String, 
+      required: true
+    },
+    otp: { 
+      type: String 
+    }
+  }, { timestamps: true });
+  
+  
+  
+  const forgotPassVerificationCodeSchema = new mongoose.Schema({
+    userId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User", 
+      index: true 
+    },
+    email: { 
+      type: String, 
+      required: true
+    },
+    otp: { 
+      type: String 
+    }
+  }, { timestamps: true });
+
+
+//module.exports = mongoose.model("User",userSchema);
+module.exports.users = mongoose.model("User", userSchema);
+module.exports.forgotPassVerificationCode = mongoose.model("ForgotPasswordVerificationCode", forgotPassVerificationCodeSchema);
+module.exports.userVerificationCode = mongoose.model("UserVerificationCode", userVerificationCodeSchema);
