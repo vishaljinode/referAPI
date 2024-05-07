@@ -13,9 +13,13 @@ const userSchema = mongoose.Schema({
         type : String,
         required : true
     },
+    userId :{
+      type : String,    
+      index: true
+    },
     otp :{
         type : String,
-        required : true
+        
     },
     role :{
         type : String,
@@ -28,12 +32,11 @@ const userSchema = mongoose.Schema({
         default : 500
     },
     referId :{
-        type : String,
-        default : 500,
+        type : String,    
         index: true
     },
-    referBy :{
-        type : mongoose.Schema.Types.ObjectId,
+    referrPersonId :{
+        type : String,
         ref: 'User',
         index: true
     },
@@ -46,20 +49,20 @@ const userSchema = mongoose.Schema({
 
 
 
-const userVerificationCodeSchema = new mongoose.Schema({
-    userId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", 
-      index: true 
-    },
-    email: { 
-      type: String, 
-      required: true
-    },
-    otp: { 
-      type: String 
-    }
-  }, { timestamps: true });
+// const userVerificationCodeSchema = new mongoose.Schema({
+//     userId: { 
+//       type: mongoose.Schema.Types.ObjectId, 
+//       ref: "User", 
+//       index: true 
+//     },
+//     email: { 
+//       type: String, 
+//       required: true
+//     },
+//     otp: { 
+//       type: String 
+//     }
+//   }, { timestamps: true });
   
   
   
@@ -78,8 +81,16 @@ const userVerificationCodeSchema = new mongoose.Schema({
     }
   }, { timestamps: true });
 
+  const counterSchema = new mongoose.Schema({
+    _id: {type: String, required: true},
+    seq: {type: Number, default: 0}
+  });
+
+
+
 
 //module.exports = mongoose.model("User",userSchema);
 module.exports.users = mongoose.model("User", userSchema);
 module.exports.forgotPassVerificationCode = mongoose.model("ForgotPasswordVerificationCode", forgotPassVerificationCodeSchema);
-module.exports.userVerificationCode = mongoose.model("UserVerificationCode", userVerificationCodeSchema);
+//module.exports.userVerificationCode = mongoose.model("UserVerificationCode", userVerificationCodeSchema);
+module.exports.counter = mongoose.model('Counter', counterSchema);
