@@ -24,6 +24,11 @@ const productSchema = mongoose.Schema({
         type:String,
         default:"Active"
     },
+   productUploadedBy : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        index: true
+    },
 }, { timestamps: true })
 
 

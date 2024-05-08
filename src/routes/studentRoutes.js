@@ -9,7 +9,7 @@ studentRouter.get('/',(req,res)=>{
     res.send("hello")
 })
 
-studentRouter.post('/signup',signUp)
+// studentRouter.post('/signup',signUp)
 
 
 module.exports = studentRouter;
