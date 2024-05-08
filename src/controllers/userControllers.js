@@ -8,7 +8,8 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const SECRET_KEY = "myprojectapiforyou";
 const sendEmail = require('../utils/sendEmail');
-
+const studentModels = require("../models/studentModel");
+const  Student = studentModels.student
 
 
 
@@ -137,7 +138,12 @@ const verifyUserOtp = async (req, res) => {
 
     // Check if the OTP matches
     if (verificationEntry.otp === otp) {
-      await User.findOneAndUpdate({ email: email }, { $set: { status: "Active" } })      
+     const verifiedUser = await User.findOneAndUpdate({ email: email }, { $set: { status: "Active" } })  
+     
+      if(verifiedUser.role=="Student"){
+        await Student.findOneAndUpdate({ email: email }, { $set: { status: "Active" } })    
+      }
+
       const signInuser = await User.findOne({ email: email }).select('_id email username');
       const token = await jwt.sign({ email: signInuser.email, id: signInuser._id }, SECRET_KEY);
       return res.status(200).json({ User: signInuser, Token: token, message: "OTP verified successfully!" });
@@ -340,6 +346,10 @@ const deleteUser = async (req, res) => {
 
   try {
     const currentUser = await User.findOne({_id : currentUserId })
+    if(!currentUser){
+      return res.status(404).json({ error: "User not found" });
+
+    }
 
     if(currentUser.role != "Admin"){
       return res.status(404).json({ error: "Only admin can delete user" });

@@ -131,7 +131,7 @@ const deleteProduct = async (req, res, next) => {
 
     try {
         // Find the product and update its status to 'deleted'
-        const updatedProduct = await Product.findByIdAndUpdate(productId, { status: 'deleted' }, { new: true }).populate('productImage');
+        const updatedProduct = await Product.findByIdAndUpdate(productId, { status: 'Deleted' }, { new: true }).populate('productImage');
 
         if (!updatedProduct) {
             return res.status(404).send('Product not found');
@@ -145,4 +145,20 @@ const deleteProduct = async (req, res, next) => {
         res.status(500).send(error.message);
     }
 };
-module.exports = { createProduct ,getProduct,editProduct , deleteProduct };
+
+// get All products
+const getAllProduct = async (req, res, next) => {
+    try {
+       
+        // Fetch the product with the image details populated
+        const product = await Product.find({status: "Active"}).populate('productImage');
+
+        if (!product) {
+            return res.status(404).send('Product not found');
+        }
+        res.status(200).json(product);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+};
+module.exports = { createProduct ,getProduct,editProduct,deleteProduct,getAllProduct };

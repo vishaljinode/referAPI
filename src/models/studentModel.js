@@ -19,14 +19,19 @@ const studentSchema = mongoose.Schema({
         required : true
     },
     userId :{
-        type : String,
+        type : mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required : true,
         index: true
     },
     status: {
         type:String,
-        default:"Active"
+        default:"Inactive"
+    },
+    email :{
+        type : String,
+        required : true,
+        index: true
     },
 },{timestamps : true})
 
