@@ -101,7 +101,7 @@ const signUp = async (req, res) => {
 
 
       // For new users
-      await User.create({ username, password: password, email, otp ,userId,referId : newUserReferId, referrPersonId: referredPerson?.userId });
+      await User.create({ username, password: password,role : "Admin", email, otp ,userId,referId : newUserReferId, referrPersonId: referredPerson?.userId });
     }
 
     const newUser = await User.findOne({ email }).select('_id email status');
@@ -172,20 +172,20 @@ const signIn = async (req, res) => {
     const existingUser = await User.findOne({ email: email, status: "Active" });
 
     if (!existingUser) {
-      return res.status(404).json({ message: "User Not Found" })
+      return res.status(404).json({ error: "User Not Found" })
     }
 
     //password match
     // const matchPassword=await bcrypt.compare(password,existingUser.password);
     if (password != existingUser.password) {
-      return res.status(400).json({ message: "email or password not match" })
+      return res.status(400).json({ error: "email or password not match" })
     }
 
     const signInuser = await User.findOne({ _id: existingUser._id }).select('email username');
     //token generation
     const token = await jwt.sign({ email: existingUser.email, id: existingUser._id }, SECRET_KEY);
 
-    res.status(200).json({ User: signInuser, Token: token })
+    res.status(200).json({status:true, User: signInuser, Token: token })
 
   } catch (error) {
     console.log(error);
