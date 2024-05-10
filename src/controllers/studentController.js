@@ -68,7 +68,7 @@ const signUpStudent = async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       if (existingUser.status === "Active") {
-        return res.status(400).json({ message: "User Already Exists" });
+        return res.status(400).json({ error: "User Already Exists" });
       }
 
       const referredPerson = await User.findOne({ referId: referId });

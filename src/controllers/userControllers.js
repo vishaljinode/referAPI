@@ -130,10 +130,10 @@ const verifyUserOtp = async (req, res) => {
     const verificationEntry = await User.findOne({ email});
 
     if (!verificationEntry) {
-      return res.status(404).json({ message: "No OTP found. Please request a new one." });
+      return res.status(404).json({ error: "No OTP found." });
     }
     if (verificationEntry.status == "active") {
-      return res.status(404).json({ message: "User Already Active" });
+      return res.status(404).json({ error: "User Already Active" });
     }
 
     // Check if the OTP matches
@@ -146,13 +146,13 @@ const verifyUserOtp = async (req, res) => {
 
       const signInuser = await User.findOne({ email: email }).select('_id email username');
       const token = await jwt.sign({ email: signInuser.email, id: signInuser._id }, SECRET_KEY);
-      return res.status(200).json({ User: signInuser, Token: token, message: "OTP verified successfully!" });
+      return res.status(200).json({ status : true, User: signInuser, Token: token, message: "OTP verified successfully!" });
     } else {
-      return res.status(400).json({ message: "Invalid OTP. Please try again." });
+      return res.status(400).json({ error: "Invalid OTP. Please try again." });
     }
   } catch (error) {
     console.error("Verification error:", error);
-    res.status(500).json({ message: "An error occurred during verification. Please try again later." });
+    res.status(500).json({ error: "An error occurred during verification. Please try again later." });
   }
 };
 
@@ -258,7 +258,7 @@ const verifyForgotPassOtp = async (req, res) => {
       await ForgotPassVerificationCode.deleteOne({ _id: verificationEntry._id })
       const signInuser = await User.findOne({ email: email }).select('_id email username');
       const token = jwt.sign({ email: signInuser.email, id: signInuser._id }, SECRET_KEY);
-      return res.status(200).json({ forgetPassUser: signInuser, Token: token, message: "OTP verified successfully!" });
+      return res.status(200).json({ status: true , forgetPassUser: signInuser, Token: token, message: "OTP verified successfully!" });
     } else {
       return res.status(400).json({ message: "Invalid OTP. Please try again." });
     }
