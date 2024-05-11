@@ -250,7 +250,7 @@ const verifyForgotPassOtp = async (req, res) => {
     // Find the OTP entry for the given email
     const verificationEntry = await ForgotPassVerificationCode.findOne({ email :email });
     if (!verificationEntry) {
-      return res.status(404).json({ message: "No OTP found. Please request a new one." });
+      return res.status(404).json({ error: "No OTP found. Please request a new one." });
     }
 
     // Check if the OTP matches
@@ -260,11 +260,11 @@ const verifyForgotPassOtp = async (req, res) => {
       const token = jwt.sign({ email: signInuser.email, id: signInuser._id }, SECRET_KEY);
       return res.status(200).json({ status: true , forgetPassUser: signInuser, Token: token, message: "OTP verified successfully!" });
     } else {
-      return res.status(400).json({ message: "Invalid OTP. Please try again." });
+      return res.status(400).json({ error: "Invalid OTP. Please try again." });
     }
   } catch (error) {
     console.error("Verification error:", error);
-    res.status(500).json({ message: "An error occurred during verification. Please try again later." });
+    res.status(500).json({ error: "An error occurred during verification. Please try again later." });
   }
 };
 
@@ -379,6 +379,61 @@ const deleteUser = async (req, res) => {
 };
 
 
+const updateUser = async (req, res) => {
+  const { email, username } = req.body;
+  const currentUserId = req.userId;
+
+  console.log("currentUserId",currentUserId)
+
+  try {
+
+    const currentUser = await User.findOne({ _id: currentUserId });
+    console.log ("currentUser in auth",currentUser)
+
+
+
+    // Find the user by email
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (currentUser.role != "Admin" || existingUser._id != currentUserId) {
+      return res.status(404).json({ error: "Only admin or current user can edit user detail" });
+    }
+
+
+    if (username) {
+      existingUser.username = username;
+    }
+
+
+    // Save the updated user
+    await existingUser.save();
+
+
+    const updatedUser = await User.findOne({ email }).select('_id email username');
+
+    const token = await jwt.sign(
+      { email: updatedUser.email, id: updatedUser._id },
+      SECRET_KEY
+    );
+
+    res
+      .status(200)
+      .json({
+        status: true,
+        Token: token,
+        User: updatedUser,
+        message: "Profile updated successfully",
+      });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 
 module.exports = {
     signUp,
@@ -388,6 +443,7 @@ module.exports = {
     verifyForgotPassOtp,
     resetPassword,
     changePassword,
-    deleteUser
+    deleteUser,
+    updateUser
 }
 

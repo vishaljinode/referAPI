@@ -88,7 +88,7 @@ const signUpStudent = async (req, res) => {
         { new: true }
       );
 
-      console.log(updatedUser);
+
     } else {
       const referredPerson = await User.findOne({ referId: referId });
 
@@ -156,7 +156,16 @@ const signUpStudent = async (req, res) => {
 const editStudentProfile = async (req, res) => {
   const { email, password, username, name, standard, rolno, marks } = req.body;
 
+  const currentUserId = req.userId;
+
+
+
+
+
   try {
+
+    const currentUser = await User.findOne({ _id: currentUserId });
+
     // Find the user by email
     const existingUser = await User.findOne({ email });
 
@@ -164,10 +173,15 @@ const editStudentProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (currentUser.role != "Admin" || existingUser._id != currentUserId) {
+      return res.status(404).json({ error: "Only admin or current user can edit student detail" });
+    }
+
+
     if (username) {
       existingUser.username = username;
     }
-    // Update other fields if necessary
+
 
     // Save the updated user
     await existingUser.save();
@@ -194,12 +208,17 @@ const editStudentProfile = async (req, res) => {
     await studentProfile.save();
 
     const existingStudent = await Student.findOne({ email });
+    const token = await jwt.sign(
+      { email: existingStudent.email, id: existingStudent._id },
+      SECRET_KEY
+    );
 
     res
       .status(200)
       .json({
         status: true,
-        updatedStudent: existingStudent,
+        Token: token,
+        User: existingStudent,
         message: "Profile updated successfully",
       });
   } catch (error) {
@@ -256,6 +275,8 @@ const getStudentProfile = async (req, res) => {
 
 const getAllStudentProfile = async (req, res) => {
   const currentUserId = req.userId;
+  const pageSize = req.body.pageSize || 10;
+  const page = req.body.page || 0;
 
   try {
     const currentUser = await User.findOne({ _id: currentUserId });
@@ -287,10 +308,10 @@ const getAllStudentProfile = async (req, res) => {
         console.error(
           `User not found for student with userId: ${studentProfile.userId}`
         );
-        continue; // Skip to the next iteration if user not found
+        continue;
       }
 
-      // Construct response object with user and student profile details
+   
       const response = {
         user: {
           id: existingUser._id,
@@ -303,14 +324,17 @@ const getAllStudentProfile = async (req, res) => {
           standard: studentProfile.standard,
           rolno: studentProfile.rolno,
           marks: studentProfile.marks,
-          // Add other student profile fields here if needed
+         
         },
       };
 
       responseArray.push(response);
     }
 
-    res.status(200).json(responseArray);
+    const count = responseArray.length
+    const paginationData = responseArray.slice((pageSize*page),((pageSize*page) + pageSize))
+
+    res.status(200).json({status : true ,users : paginationData , count : count});
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });
@@ -356,10 +380,15 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+
+
+
+
 module.exports = {
   deleteStudent,
   signUpStudent,
   editStudentProfile,
   getStudentProfile,
   getAllStudentProfile,
+
 };

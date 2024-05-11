@@ -12,10 +12,11 @@ studentRouter.get('/',(req,res)=>{
 })
 
 studentRouter.post('/signupstudent',signUpStudent)
-studentRouter.post('/editstudentprofile',editStudentProfile)
-studentRouter.get('/getstudentprofile/:studentId',getStudentProfile)
-studentRouter.get('/getallstudentprofile',auth,getAllStudentProfile)
+studentRouter.post('/editstudentprofile',auth,editStudentProfile)
+studentRouter.get('/getstudentprofile/:studentId',auth,getStudentProfile)
+studentRouter.post('/getallstudentprofile',auth,getAllStudentProfile)
 studentRouter.post('/deletestudent',auth,deleteStudent)
+
 
 
 module.exports = studentRouter;

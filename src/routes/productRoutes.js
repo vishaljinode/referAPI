@@ -18,6 +18,6 @@ productRouter.get('/getProduct/:productId',auth,getProduct);
 productRouter.patch('/editproduct/:productId',auth,editProduct);
 productRouter.get('/deleteProduct/:productId',auth,deleteProduct);
 
-productRouter.get('/getallproduct/',auth,getAllProduct);
+productRouter.post('/getallproduct/',auth,getAllProduct);
 
 module.exports = productRouter;

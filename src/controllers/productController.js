@@ -68,14 +68,14 @@ const getProduct = async (req, res, next) => {
             return res.status(404).send('Product not found');
         }
 
-        res.status(200).json(product);
+        res.status(200).json({status: true,product});
     } catch (error) {
         res.status(500).send(error.message);
     }
 };
 
 
-const editProduct = async (req, res, next) => {
+const editProduct = async (req, res) => {
     upload(req, res, async (err) => {
         const { productId } = req.params;
         const { productName, details, price, stock } = req.body;
@@ -126,7 +126,7 @@ const editProduct = async (req, res, next) => {
     });
 };
 
-const deleteProduct = async (req, res, next) => {
+const deleteProduct = async (req, res) => {
     const { productId } = req.params;
 
     try {
@@ -138,6 +138,7 @@ const deleteProduct = async (req, res, next) => {
         }
 
         res.status(200).json({
+            status: true,
             message: 'Product successfully marked as deleted',
             product: updatedProduct
         });
@@ -147,16 +148,23 @@ const deleteProduct = async (req, res, next) => {
 };
 
 // get All products
-const getAllProduct = async (req, res, next) => {
+const getAllProduct = async (req, res) => {
+
+    const pageSize = req.body.pageSize || 10;
+    const page = req.body.page || 0;
     try {
        
         // Fetch the product with the image details populated
-        const product = await Product.find({status: "Active"}).populate('productImage');
+        const product = await Product.find({status: "Active"})
+        .populate('productImage')
+        .skip(page*pageSize).limit(pageSize);
+
+        const count = await Product.countDocuments({ status: 'Active' });
 
         if (!product) {
             return res.status(404).send('Product not found');
         }
-        res.status(200).json(product);
+        res.status(200).json({status : true, count,product});
     } catch (error) {
         res.status(500).send(error.message);
     }
