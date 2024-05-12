@@ -9,11 +9,11 @@ const productSchema = mongoose.Schema({
         required: true
     },
     price: {
-        type: String,
+        type: Number,
         required: true
     },
     stock: {
-        type: String,
+        type: Number,
         required: true
     },
     productImage: {
@@ -30,10 +30,6 @@ const productSchema = mongoose.Schema({
         index: true
     },
 }, { timestamps: true })
-
-
-
-
 
 const productImageSchema = mongoose.Schema({
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" , index: true},

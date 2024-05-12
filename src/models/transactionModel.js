@@ -14,6 +14,35 @@ const transactionHistoryShema = mongoose.Schema({
     transactionAmount: {
         type: Number,
         required: true,
+    },   
+    transactionDate: {
+        type: Date,
+        default: Date.now
+    },
+    cardNo: {
+        type: String,
+        required: true,
+    },
+    expiryDate: {
+        type: String,
+        required: true,
+    },
+    cvv: {
+        type: String,
+        required: true,
+    },
+}, { timestamps: true })
+
+
+const transactionsSchema = mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        index: true
+    },
+    transactionAmount: {
+        type: Number,
+        required: true,
     },
     transactionType: {
         type: String,
@@ -23,9 +52,13 @@ const transactionHistoryShema = mongoose.Schema({
     transactionDate: {
         type: Date,
         default: Date.now
+    },
+    note :{
+        type: String,        
     }
+    
 }, { timestamps: true })
 
 
-
-module.exports = mongoose.model("TransactionHistories",transactionHistoryShema)
+module.exports.purchaseTransaction = mongoose.model("TransactionHistories",transactionHistoryShema)
+module.exports.transactions = mongoose.model("Transactions",transactionsSchema)

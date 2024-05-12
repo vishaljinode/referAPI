@@ -5,6 +5,13 @@ const fs = require('fs');
 
 const Product = ProductModel.product;
 const ProductImage = ProductModel.productImage;
+const PurchasedProduct = ProductModel.purchasedProduct;
+const TransactionModels = require('../models/transactionModel');
+const Transaction = TransactionModels.purchaseTransaction
+const Transactions = TransactionModels.transactions
+const userModels = require("../models/userModel");
+const User = userModels.users;
+
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -128,6 +135,9 @@ const editProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
     const { productId } = req.params;
+    if (!productId) {
+        return res.status(404).send('productId is missing');
+    }
 
     try {
         // Find the product and update its status to 'deleted'
@@ -169,4 +179,91 @@ const getAllProduct = async (req, res) => {
         res.status(500).send(error.message);
     }
 };
-module.exports = { createProduct ,getProduct,editProduct,deleteProduct,getAllProduct };
+
+
+const purchaseProduct = async (req, res) => {
+    const { productId, purchasedBy, transactionAmount, cardNo, expiryDate, cvv } = req.body;
+    
+    // Check if all required fields are present
+    if (!productId || !purchasedBy || !transactionAmount || !cardNo || !expiryDate || !cvv) {
+        return res.status(400).json({ error: 'Required fields are missing' });
+    }
+
+    try {
+        // Check if product exists and is in stock
+        const currentProduct = await Product.findOne({ _id: productId });
+        if (!currentProduct || currentProduct.stock === 0) {
+            return res.status(404).json({ error: 'Product not found or out of stock' });
+        }
+
+        // Create purchased product record
+        const newPurchased = new PurchasedProduct({ productId, purchasedBy });
+        const savedPurchased = await newPurchased.save();
+
+        // Create transaction record
+        const newTransaction = new Transaction({
+            productId,
+            userId: purchasedBy,
+            transactionAmount,
+            cardNo,
+            expiryDate,
+            cvv
+        });
+        await newTransaction.save();
+
+        // Update User Balance
+        const currentUser = await User.findOne({ _id: purchasedBy });
+        const currentBalance = currentUser.balance;
+        const newBalance = currentBalance - transactionAmount;
+        const updatedUser = await User.findOneAndUpdate(
+            { _id: purchasedBy },
+            { $set: { balance: newBalance } },
+            { new: true }
+        );
+
+        // Create transaction record for user's balance update
+        const newTrans = new Transactions({
+            userId: purchasedBy,
+            transactionAmount,
+            transactionType: "debit",
+            note: `Amount debited for purchase product ${currentProduct.productName}`
+        });
+        await newTrans.save();
+
+        // Update Product Stock
+        const newStock = currentProduct.stock - 1;
+        const updatedProduct = await Product.findOneAndUpdate(
+            { _id: productId },
+            { $set: { stock: newStock } },
+            { new: true }
+        );
+
+        // Update Refer User Balance if exists
+        
+            const additionalAmount = transactionAmount * 0.05;
+
+            const referUser = await User.findOneAndUpdate(
+                { userId: currentUser.referrPersonId },
+                { $inc: { balance: additionalAmount } },
+                { new: true }
+            );
+
+          const referUserId2 = await User.findOne({ userId: currentUser.referrPersonId });                   
+          const newTrans2 = new Transactions({
+                userId: referUserId2._id,
+                transactionAmount : additionalAmount,
+                transactionType: "credit",
+                note: `Amount credited for purchase product ${currentUser.username}`
+            });
+            await newTrans2.save();
+        
+
+        // Return success response
+        res.status(201).json({ status: true, PurchasedProduct: savedPurchased });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+module.exports = {purchaseProduct, createProduct ,getProduct,editProduct,deleteProduct,getAllProduct };

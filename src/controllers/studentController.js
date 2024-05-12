@@ -281,8 +281,10 @@ const getAllStudentProfile = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    
+
     if (currentUser.role != "Admin") {
-      return res.status(404).json({ error: "Only admin can delete user" });
+      return res.status(404).json({ error: "Only admin can access all user" });
     }
 
     // Find all active student profiles
