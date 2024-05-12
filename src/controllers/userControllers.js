@@ -104,7 +104,7 @@ const signUp = async (req, res) => {
       await User.create({ username, password: password,role : "Admin", email, otp ,userId,referId : newUserReferId, referrPersonId: referredPerson?.userId });
     }
 
-    const newUser = await User.findOne({ email }).select('_id email status');
+    const newUser = await User.findOne({ email }).select('_id email status role');
     const sendEmailPromise = sendEmail({
       email: newUser.email,
       subject: "Please verify OTP for signup",
@@ -144,7 +144,7 @@ const verifyUserOtp = async (req, res) => {
         await Student.findOneAndUpdate({ email: email }, { $set: { status: "Active" } })    
       }
 
-      const signInuser = await User.findOne({ email: email }).select('_id email username');
+      const signInuser = await User.findOne({ email: email }).select('_id email username role');
       const token = await jwt.sign({ email: signInuser.email, id: signInuser._id }, SECRET_KEY);
       return res.status(200).json({ status : true, User: signInuser, Token: token, message: "OTP verified successfully!" });
     } else {
@@ -181,7 +181,7 @@ const signIn = async (req, res) => {
       return res.status(400).json({ error: "email or password not match" })
     }
 
-    const signInuser = await User.findOne({ _id: existingUser._id }).select('email username');
+    const signInuser = await User.findOne({ _id: existingUser._id }).select('email username role');
     //token generation
     const token = await jwt.sign({ email: existingUser.email, id: existingUser._id }, SECRET_KEY);
 
@@ -256,7 +256,7 @@ const verifyForgotPassOtp = async (req, res) => {
     // Check if the OTP matches
     if (verificationEntry.otp === otp) {
       await ForgotPassVerificationCode.deleteOne({ _id: verificationEntry._id })
-      const signInuser = await User.findOne({ email: email }).select('_id email username');
+      const signInuser = await User.findOne({ email: email }).select('_id email username role');
       const token = jwt.sign({ email: signInuser.email, id: signInuser._id }, SECRET_KEY);
       return res.status(200).json({ status: true , forgetPassUser: signInuser, Token: token, message: "OTP verified successfully!" });
     } else {
@@ -285,7 +285,7 @@ const resetPassword =async(req,res)=>{
 
   try {
     let updatedUser = await User.findOneAndUpdate({_id : userId},{$set :{ password : password1}},{upsert : false , new:true})
-  .select('_id username email')
+  .select('_id username email role')
   let token = jwt.sign({email : updatedUser.email , _id : updatedUser._id }, SECRET_KEY)
   return res.status(200).json({status : true, User : updatedUser , Token : token})
 
@@ -413,7 +413,7 @@ const updateUser = async (req, res) => {
     await existingUser.save();
 
 
-    const updatedUser = await User.findOne({ email }).select('_id email username');
+    const updatedUser = await User.findOne({ email }).select('_id email username role');
 
     const token = await jwt.sign(
       { email: updatedUser.email, id: updatedUser._id },
@@ -435,6 +435,34 @@ const updateUser = async (req, res) => {
 };
 
 
+
+//get user
+const getUserById = async (req, res) => {
+  const currentUserId = req.params.id
+
+
+  try {
+    const currentUser = await User.findOne({_id : currentUserId })
+    if(!currentUser){
+      return res.status(404).json({ error: "User not found" });
+    }
+
+      // Respond with success message
+      return res.status(200).json({
+          status: true,
+          message: "User detail getting successfully",
+          user: { id: currentUser._id, username: currentUser.username, email: currentUser.email, status: currentUser.status , balance : currentUser.balance, role : currentUser.role }
+      });
+  } catch (error) {
+      return res.status(500).json({ message: "An error occurred during the delete operation" });
+  }
+};
+
+
+
+
+
+
 module.exports = {
     signUp,
     verifyUserOtp,
@@ -444,6 +472,7 @@ module.exports = {
     resetPassword,
     changePassword,
     deleteUser,
-    updateUser
+    updateUser,
+    getUserById
 }
 

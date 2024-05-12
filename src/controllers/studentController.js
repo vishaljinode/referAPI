@@ -158,22 +158,19 @@ const editStudentProfile = async (req, res) => {
 
   const currentUserId = req.userId;
 
-
-
-
-
   try {
 
     const currentUser = await User.findOne({ _id: currentUserId });
 
     // Find the user by email
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email:email });
 
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (currentUser.role != "Admin" || existingUser._id != currentUserId) {
+
+    if (currentUser.role != "Admin" && !currentUser._id.equals(existingUser._id)) {
       return res.status(404).json({ error: "Only admin or current user can edit student detail" });
     }
 
@@ -208,16 +205,15 @@ const editStudentProfile = async (req, res) => {
     await studentProfile.save();
 
     const existingStudent = await Student.findOne({ email });
-    const token = await jwt.sign(
-      { email: existingStudent.email, id: existingStudent._id },
-      SECRET_KEY
-    );
+    // const token = await jwt.sign(
+    //   { email: existingStudent.email, id: existingStudent._id },
+    //   SECRET_KEY
+    // );
 
     res
       .status(200)
       .json({
         status: true,
-        Token: token,
         User: existingStudent,
         message: "Profile updated successfully",
       });
@@ -294,7 +290,7 @@ const getAllStudentProfile = async (req, res) => {
     if (!studentProfiles || studentProfiles.length === 0) {
       return res
         .status(404)
-        .json({ message: "No active student profiles found" });
+        .json({ error: "No active student profiles found" });
     }
 
     // Array to store response objects for each student
@@ -324,6 +320,7 @@ const getAllStudentProfile = async (req, res) => {
           standard: studentProfile.standard,
           rolno: studentProfile.rolno,
           marks: studentProfile.marks,
+          id : studentProfile._id
          
         },
       };
@@ -337,7 +334,7 @@ const getAllStudentProfile = async (req, res) => {
     res.status(200).json({status : true ,users : paginationData , count : count});
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(500).json({ error: "Something went wrong" });
   }
 };
 
@@ -351,12 +348,15 @@ const deleteStudent = async (req, res) => {
     if (!currentUser) {
       return res.status(404).json({ error: "User token not found" });
     }
+    if (currentUser.role !="Admin") {
+      return res.status(401).json({ error: "Only admin can delete user" });
+    }
 
     // Find the user by email
     const existingUser = await User.findOne({ email });
 
     if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Update the user's status to "Deleted"
@@ -366,7 +366,7 @@ const deleteStudent = async (req, res) => {
     // Find and update the student profile associated with the user
     const studentProfile = await Student.findOne({ userId: existingUser._id });
     if (!studentProfile) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(404).json({ error: "Student profile not found" });
     }
 
     // Update the student profile's status to "Deleted"
@@ -376,7 +376,7 @@ const deleteStudent = async (req, res) => {
     res.status(200).json({ message: "Student deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(500).json({ error: "Something went wrong" });
   }
 };
 

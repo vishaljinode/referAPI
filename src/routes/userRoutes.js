@@ -8,7 +8,7 @@ const {signUp,
     verifyForgotPassOtp,
     resetPassword,
     changePassword,
-    deleteUser,
+    deleteUser,getUserById,
     updateUser} = require('../controllers/userControllers')
 
 
@@ -26,6 +26,7 @@ userRouter.put('/resetPassword',auth,resetPassword)
 userRouter.post('/changepassword',auth,changePassword)
 userRouter.post('/deleteuser',auth,deleteUser)
 userRouter.post('/updateuser',auth,updateUser)
+userRouter.get('/getuserbyid/:id',auth,getUserById)
 
 
 module.exports = userRouter;

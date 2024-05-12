@@ -15,10 +15,12 @@ const Student = require('./models/studentModel')
 const TransactionHistory = require('./models/transactionModel')
 
 dotenv.config()
+
 app.use(express.urlencoded({extended:true}))
 app.use(express.json())
 app.use(cors())
 
+app.use('/images', express.static('src/uploads'));
 app.use('/users',userRouter)
 app.use('/students',studentRouter)
 app.use('/products',productRouter)
