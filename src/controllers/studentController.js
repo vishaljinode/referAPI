@@ -289,6 +289,8 @@ const getAllStudentProfile = async (req, res) => {
 
     // Find all active student profiles
     const studentProfiles = await Student.find({ status: "Active" });
+   
+
     if (!studentProfiles || studentProfiles.length === 0) {
       return res
         .status(404)
@@ -302,6 +304,7 @@ const getAllStudentProfile = async (req, res) => {
     for (const studentProfile of studentProfiles) {
       // Find the user by student's userId
       const existingUser = await User.findById(studentProfile.userId);
+      
       if (!existingUser) {
         console.error(
           `User not found for student with userId: ${studentProfile.userId}`

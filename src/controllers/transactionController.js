@@ -1,16 +1,83 @@
+const multer = require('multer');
+const ProductModel = require('../models/productsModel');
+const path = require('path');
+const fs = require('fs');
 
-
-
+const Product = ProductModel.product;
+const ProductImage = ProductModel.productImage;
+const PurchasedProduct = ProductModel.purchasedProduct;
+const TransactionModels = require('../models/transactionModel');
+const Transaction = TransactionModels.purchaseTransaction
+const Transactions = TransactionModels.transactions
 const userModels = require("../models/userModel");
 const User = userModels.users;
-//const UserVerificationCode = userModels.userVerificationCode;
-const ForgotPassVerificationCode = userModels.forgotPassVerificationCode;
-const Counter = userModels.counter;
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const SECRET_KEY = "myprojectapiforyou";
-const sendEmail = require("../utils/sendEmail");
-const studentModels = require("../models/studentModel");
-const Student = studentModels.student;
 
+
+
+const getTransactionById = async (req,res)=>{
+    const currentUserId = req.userId;
+    if (!currentUserId) {     
+        return res.status(404).json({ error: 'currentUserId not found' })
+    }    
+    const pageSize = req.body.pageSize || 10;
+    const page = req.body.page || 0;
+
+    try {      
+
+  
+        // Fetch the product with the image details populated
+        const transaction = await Transactions.find({userId : currentUserId})
+        .skip(page*pageSize).limit(pageSize);
+
+        const count = await Transactions.countDocuments({userId : currentUserId});
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'transaction not found' })
+            
+        }
+        res.status(200).json({status : true, count,transaction});
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+
+}
+
+
+const getAllTransaction = async (req,res)=>{
+    const currentUserId = req.userId;
+    if (!currentUserId) {     
+        return res.status(404).json({ error: 'currentUserId not found' })
+    }  
+    
+    const currentUser = await User.findOne({ _id: currentUserId });
+    
+    if (currentUser.role != "Admin") {
+        return res.status(404).json({ error: 'Only Adminn can access this' })
+        
+    }
+
+
+    const pageSize = req.body.pageSize || 10;
+    const page = req.body.page || 0;
+
+    try {      
+        // Fetch the product with the image details populated
+        const transaction = await Transactions.find()
+        .skip(page*pageSize).limit(pageSize);
+
+        const count = await Transactions.countDocuments();
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'transaction not found' })
+            
+        }
+        res.status(200).json({status : true, count,transaction});
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+
+}
+
+
+
+module.exports = {getTransactionById,getAllTransaction}

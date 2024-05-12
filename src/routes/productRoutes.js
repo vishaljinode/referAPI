@@ -1,7 +1,11 @@
 const express = require('express')
 const productRouter = express.Router()
 const auth = require('../middleware/auth');
-const {upload,purchaseProduct, createProduct,getProduct,editProduct,deleteProduct,getAllProduct} = require('../controllers/productController')
+const {upload,purchaseProduct, 
+    createProduct,getProduct,
+    editProduct,deleteProduct,
+    getAllProduct,getPurchaseByid,
+    getAllPurchases} = require('../controllers/productController')
 
 
 
@@ -21,5 +25,7 @@ productRouter.get('/deleteProduct/:productId',auth,deleteProduct);
 productRouter.post('/getallproduct/',auth,getAllProduct);
 
 productRouter.post('/purchaseProduct/',auth,purchaseProduct);
+productRouter.post('/getPurchaseByid/',auth,getPurchaseByid);
+productRouter.post('/getAllPurchases/',auth,getAllPurchases);
 
 module.exports = productRouter;

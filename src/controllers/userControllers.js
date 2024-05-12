@@ -388,10 +388,7 @@ const updateUser = async (req, res) => {
   try {
 
     const currentUser = await User.findOne({ _id: currentUserId });
-    console.log ("currentUser in auth",currentUser)
-
-
-
+    
     // Find the user by email
     const existingUser = await User.findOne({ email });
 
