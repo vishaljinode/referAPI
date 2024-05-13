@@ -11,7 +11,7 @@ const {signUp,
     deleteUser,getUserById,
     updateUser} = require('../controllers/userControllers')
 
-
+const {HomeSummary} = require('../controllers/transactionController')
 
 userRouter.get('/',(req,res)=>{
     res.send("hello")
@@ -27,6 +27,8 @@ userRouter.post('/changepassword',auth,changePassword)
 userRouter.post('/deleteuser',auth,deleteUser)
 userRouter.post('/updateuser',auth,updateUser)
 userRouter.get('/getuserbyid/:id',auth,getUserById)
+
+userRouter.get('/summary',auth,HomeSummary)
 
 
 module.exports = userRouter;

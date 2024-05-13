@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 
 const {signUpStudent,editStudentProfile,
     getStudentProfile,getAllStudentProfile,
-    deleteStudent} = require('../controllers/studentController')
+    deleteStudent,getStudentProfileByuserId} = require('../controllers/studentController')
 
 
 studentRouter.get('/',(req,res)=>{
@@ -16,6 +16,7 @@ studentRouter.post('/editstudentprofile',auth,editStudentProfile)
 studentRouter.get('/getstudentprofile/:studentId',auth,getStudentProfile)
 studentRouter.post('/getallstudentprofile',auth,getAllStudentProfile)
 studentRouter.post('/deletestudent',auth,deleteStudent)
+studentRouter.get('/getStudentProfileByuserId',auth,getStudentProfileByuserId)
 
 
 

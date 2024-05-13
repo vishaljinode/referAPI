@@ -11,6 +11,9 @@ const Transaction = TransactionModels.purchaseTransaction
 const Transactions = TransactionModels.transactions
 const userModels = require("../models/userModel");
 const User = userModels.users;
+const studentModels = require("../models/studentModel");
+const Student = studentModels.student;
+
 
 
 
@@ -84,6 +87,51 @@ const getAllTransaction = async (req,res)=>{
 
 }
 
+const HomeSummary = async (req,res)=>{
+
+    const currentUserId = req.userId;
+    if (!currentUserId) {     
+        return res.status(404).json({ error: 'currentUserId not found' })
+    }  
+    
+    const currentUser = await User.findOne({ _id: currentUserId })
+   
+    if (!currentUser) {     
+        return res.status(404).json({ error: 'currentUser not found' })
+    }
+
+    if (currentUser.role != "Admin") {
+        return res.status(404).json({ error: 'Only Adminn can access this' })
+        
+    }   
+    try {
+        const [productCount, studentCount, transactionCount, purchasedProductCount] = await Promise.all([
+            Product.countDocuments({status: "Active"}),
+            Student.countDocuments({status: "Active"}),
+            Transactions.countDocuments(),
+            PurchasedProduct.countDocuments()
+        ]);
+    
+       
+
+        let summary ={
+            productCount,
+             studentCount, 
+             transactionCount, 
+             purchasedProductCount
+
+        }    
+        res.status(200).json({status : true ,summary});
+    } catch (error) {
+        console.error("Error in fetching counts: ", error);
+    }
+    
+        
 
 
-module.exports = {getTransactionById,getAllTransaction}
+    
+
+
+}
+
+module.exports = {getTransactionById,getAllTransaction,HomeSummary}

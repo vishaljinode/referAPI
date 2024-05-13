@@ -387,6 +387,55 @@ const deleteStudent = async (req, res) => {
 
 
 
+//get student profile by userId
+const getStudentProfileByuserId = async (req, res) => {
+  const currentUserId = req.userId;
+
+  try {
+    // Find the student profile associated with the user
+    const studentProfile = await Student.findOne({
+      userId: currentUserId,
+      status: "Active",
+    });
+
+    if (!studentProfile) {
+      return res.status(404).json({ message: "Student profile not found" });
+    }
+    // Find the user by email
+    const existingUser = await User.findOne({
+      email: studentProfile.email,
+      status: "Active",
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Construct response object with user and student profile details
+    const response = {
+      user: {
+        id: existingUser._id,
+        email: existingUser.email,
+        username: existingUser.username,
+        // Add other user fields here if needed
+      },
+      studentProfile: {
+        name: studentProfile.name,
+        standard: studentProfile.standard,
+        rolno: studentProfile.rolno,
+        marks: studentProfile.marks,
+        // Add other student profile fields here if needed
+      },
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+
 
 
 module.exports = {
@@ -395,5 +444,6 @@ module.exports = {
   editStudentProfile,
   getStudentProfile,
   getAllStudentProfile,
+  getStudentProfileByuserId
 
 };
