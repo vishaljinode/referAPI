@@ -182,8 +182,7 @@ const getAllProduct = async (req, res) => {
 
 
 const purchaseProduct = async (req, res) => {
-    const { productId, purchasedBy, transactionAmount, cardNo, expiryDate, cvv } = req.body;
-    
+    const { productId, purchasedBy, transactionAmount, cardNo, expiryDate, cvv } = req.body;    
     // Check if all required fields are present
     if (!productId || !purchasedBy || !transactionAmount || !cardNo || !expiryDate || !cvv) {
         return res.status(400).json({ error: 'Required fields are missing' });
@@ -191,14 +190,12 @@ const purchaseProduct = async (req, res) => {
 
     try {
         // Check if product exists and is in stock
-        const currentProduct = await Product.findOne({ _id: productId });
+        const currentProduct = await Product.findOne({ _id: productId });        
         if (!currentProduct || currentProduct.stock === 0) {
             return res.status(404).json({ error: 'Product not found or out of stock' });
         }
 
-        // Create purchased product record
-        const newPurchased = new PurchasedProduct({ productId, purchasedBy });
-        const savedPurchased = await newPurchased.save();
+       
 
         // Create transaction record
         const newTransaction = new Transaction({
@@ -257,7 +254,11 @@ const purchaseProduct = async (req, res) => {
             });
             await newTrans2.save();
         
+            // Create purchased product record
+            const newPurchased = new PurchasedProduct({ productId, purchasedBy });
+            const savedPurchased = await newPurchased.save();
 
+            
         // Return success response
         res.status(201).json({ status: true, PurchasedProduct: savedPurchased });
     } catch (error) {
@@ -273,6 +274,10 @@ const getAllPurchases = async (req, res) => {
     }
     const currentUser = await User.findOne({ _id: currentUserId });
     
+    if (!currentUser) {     
+        return res.status(404).json({ error: 'currentUser not found' })
+    }
+
     if (currentUser.role != "Admin") {
         return res.status(404).json({ error: 'Only Adminn can access this' })
         
@@ -285,8 +290,13 @@ const getAllPurchases = async (req, res) => {
 
     try {      
         // Fetch the product with the image details populated
-        const product = await PurchasedProduct.find({status: "Active"})
-        .populate('productId')
+        const product = await PurchasedProduct.find({ status: "Active" })
+        .populate({
+            path: 'productId',
+            populate: {
+                path: 'productImage'
+            }
+        })
         .populate('purchasedBy')
         .skip(page*pageSize).limit(pageSize);
         const count = await PurchasedProduct.countDocuments({purchasedBy : currentUserId, status: 'Active' });
@@ -313,8 +323,13 @@ const getPurchaseByid = async (req, res) => {
 
     try {      
         // Fetch the product with the image details populated
-        const product = await PurchasedProduct.find({purchasedBy : currentUserId,status: "Active"})
-        .populate('productId')
+        const product = await PurchasedProduct.find({ status: "Active" })
+        .populate({
+            path: 'productId',
+            populate: {
+                path: 'productImage'
+            }
+        })
         .populate('purchasedBy')
         .skip(page*pageSize).limit(pageSize);
         const count = await PurchasedProduct.countDocuments({purchasedBy : currentUserId, status: 'Active' });

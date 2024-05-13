@@ -27,6 +27,7 @@ const getTransactionById = async (req,res)=>{
   
         // Fetch the product with the image details populated
         const transaction = await Transactions.find({userId : currentUserId})
+        .populate('userId','username email')
         .skip(page*pageSize).limit(pageSize);
 
         const count = await Transactions.countDocuments({userId : currentUserId});
@@ -49,8 +50,12 @@ const getAllTransaction = async (req,res)=>{
         return res.status(404).json({ error: 'currentUserId not found' })
     }  
     
-    const currentUser = await User.findOne({ _id: currentUserId });
-    
+    const currentUser = await User.findOne({ _id: currentUserId })
+   
+    if (!currentUser) {     
+        return res.status(404).json({ error: 'currentUser not found' })
+    }
+
     if (currentUser.role != "Admin") {
         return res.status(404).json({ error: 'Only Adminn can access this' })
         
@@ -63,6 +68,7 @@ const getAllTransaction = async (req,res)=>{
     try {      
         // Fetch the product with the image details populated
         const transaction = await Transactions.find()
+        .populate('userId','username email')
         .skip(page*pageSize).limit(pageSize);
 
         const count = await Transactions.countDocuments();
