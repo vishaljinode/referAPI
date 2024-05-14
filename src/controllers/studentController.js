@@ -42,7 +42,121 @@ async function checkUserIdUnique(userId) {
   return !result;
 }
 
-//SingUp
+//SingUp Old
+// const signUpStudent = async (req, res) => {
+//   const { email, password, username, referId, name, standard, rolno, marks } =
+//     req.body;
+
+//   // Validate required fields
+//   const requiredFields = {
+//     email,
+//     password,
+//     username,
+//     referId,
+//     name,
+//     standard,
+//     rolno,
+//     marks,
+//   };
+//   for (let field in requiredFields) {
+//     if (!requiredFields[field]) {
+//       return res.status(400).json({ error: `${field} is missing` });
+//     }
+//   }
+
+//   let otp = Array.from({ length: 4 }, () =>
+//     Math.floor(Math.random() * 10)
+//   ).join("");
+
+//   try {
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser) {
+//       if (existingUser.status === "Active") {
+//         return res.status(400).json({ error: "User Already Exists" });
+//       }
+
+//       const referredPerson = await User.findOne({ referId: referId });
+
+//       if (!referredPerson) {
+//         return res.status(400).json({ error: "Invalid ReferId" });
+//       }
+
+//       const updatedUser = await User.findOneAndUpdate(
+//         { email: email },
+//         {
+//           username,
+//           password: password,
+//           otp,
+//           referrPersonId: referredPerson?.userId,
+//         },
+//         { new: true }
+//       );
+
+
+//     } else {
+//       const referredPerson = await User.findOne({ referId: referId });
+
+//       if (!referredPerson) {
+//         return res.status(400).json({ error: "Invalid ReferId" });
+//       }
+
+//       const userId = `A${await getNextSequence("userId")}`;
+
+//       // Generate unique ReferId
+//       let newUserReferId;
+//       do {
+//         newUserReferId = generateReferId();
+//       } while (!(await checkReferIdUnique(newUserReferId)));
+
+//       // For new users
+//       const createdUser = await User.create({
+//         username,
+//         password: password,
+//         email,
+//         otp,
+//         userId,
+//         referId: newUserReferId,
+//         referrPersonId: referredPerson?.userId,
+//       });
+//       await Student.create({
+//         name,
+//         email,
+//         standard,
+//         rolno,
+//         marks,
+//         userId: createdUser._id,
+//       });
+//     }
+
+//     const newUser = await User.findOne({ email }).select("_id email status");
+
+//     const sendEmailPromise = sendEmail({
+//       email: newUser.email,
+//       subject: "Please verify OTP for signup",
+//       message: `Your OTP is ${otp}`,
+//     });
+
+//     await Promise.all([sendEmailPromise]);
+//     const signUpToken = await jwt.sign(
+//       { email: newUser.email, id: newUser._id },
+//       SECRET_KEY
+//     );
+
+//     res
+//       .status(201)
+//       .json({
+//         status: true,
+//         user: newUser,
+//         token: signUpToken,
+//         message: `OTP sent on ${newUser.email}`,
+//       });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Something went wrong" });
+//   }
+// };
+
+
 const signUpStudent = async (req, res) => {
   const { email, password, username, referId, name, standard, rolno, marks } =
     req.body;
@@ -81,11 +195,13 @@ const signUpStudent = async (req, res) => {
         return res.status(400).json({ error: "Invalid ReferId" });
       }
 
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const updatedUser = await User.findOneAndUpdate(
         { email: email },
         {
           username,
-          password: password,
+          password: hashedPassword,
           otp,
           referrPersonId: referredPerson?.userId,
         },
@@ -109,9 +225,11 @@ const signUpStudent = async (req, res) => {
       } while (!(await checkReferIdUnique(newUserReferId)));
 
       // For new users
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const createdUser = await User.create({
         username,
-        password: password,
+        password: hashedPassword,
         email,
         otp,
         userId,
@@ -155,6 +273,8 @@ const signUpStudent = async (req, res) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+
 
 //edit student
 const editStudentProfile = async (req, res) => {

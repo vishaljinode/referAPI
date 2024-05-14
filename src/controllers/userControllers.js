@@ -1,5 +1,11 @@
+
+
 const userModels = require("../models/userModel");
 const User = userModels.users;
+const TransactionModels = require('../models/transactionModel');
+const Transaction = TransactionModels.purchaseTransaction
+const Transactions = TransactionModels.transactions
+
 
 //const UserVerificationCode = userModels.userVerificationCode;
 const ForgotPassVerificationCode = userModels.forgotPassVerificationCode;
@@ -143,7 +149,6 @@ const signUp = async (req, res) => {
 
   // Generate hashed password
   const hashedPassword = await bcrypt.hash(password, 10);
-
   let otp = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10)).join('');
 
   try {
@@ -165,7 +170,7 @@ const signUp = async (req, res) => {
         { new: true }
       );
 
-      console.log(updatedUser);
+
     } else {
       const referredPerson = await User.findOne({ referId: referId });
 
@@ -182,7 +187,9 @@ const signUp = async (req, res) => {
       } while (!(await checkReferIdUnique(newUserReferId)));
 
       // For new users
-      await User.create({ username, password: hashedPassword, role: "Admin", email, otp, userId, referId: newUserReferId, referrPersonId: referredPerson?.userId });
+    await User.create({ username, password: hashedPassword, role: "Admin", email, otp, userId, referId: newUserReferId, referrPersonId: referredPerson?.userId });
+    
+   
     }
 
     const newUser = await User.findOne({ email }).select('_id email status role');
@@ -227,6 +234,24 @@ const verifyUserOtp = async (req, res) => {
       if (verifiedUser.role == "Student") {
         await Student.findOneAndUpdate({ email: email }, { $set: { status: "Active" } })
       }
+
+      const referUser = await User.findOneAndUpdate(
+        {userId: verificationEntry.referrPersonId },
+        { $inc: { balance: 25 } },
+        { new: true }
+    ); 
+    
+
+
+    const newTrans2 = new Transactions({
+        userId: referUser._id,
+        transactionAmount: 25,
+        transactionType: "credit",
+        note: `Amount credited for refer user ${verificationEntry.username}`
+    });
+
+    await newTrans2.save();
+
 
       const signInuser = await User.findOne({ email: email }).select('_id email username role');
       const token = await jwt.sign({ email: signInuser.email, id: signInuser._id }, SECRET_KEY);
@@ -597,7 +622,6 @@ const updateUser = async (req, res) => {
   const { email, username } = req.body;
   const currentUserId = req.userId;
 
-  console.log("currentUserId", currentUserId)
 
   try {
 
@@ -662,7 +686,7 @@ const getUserById = async (req, res) => {
     return res.status(200).json({
       status: true,
       message: "User detail getting successfully",
-      user: { id: currentUser._id, username: currentUser.username, email: currentUser.email, status: currentUser.status, balance: currentUser.balance, role: currentUser.role }
+      user: { id: currentUser._id, username: currentUser.username, email: currentUser.email, status: currentUser.status, balance: currentUser.balance, role: currentUser.role , referId : currentUser.referId}
     });
   } catch (error) {
     return res.status(500).json({ message: "An error occurred during the delete operation" });

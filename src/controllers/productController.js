@@ -324,7 +324,7 @@ const getPurchaseByid = async (req, res) => {
 
     try {
         // Fetch the product with the image details populated
-        const product = await PurchasedProduct.find({ status: "Active" })
+        const product = await PurchasedProduct.find({ purchasedBy : currentUserId, status: "Active" })
             .populate({
                 path: 'productId',
                 populate: {
