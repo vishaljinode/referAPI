@@ -8,15 +8,6 @@ const {upload,purchaseProduct,
     getAllPurchases} = require('../controllers/productController')
 
 
-
-
-productRouter.get('/',(req,res)=>{
-    res.send("hello products")
-})
-
-
-
-
 productRouter.post('/createproduct',auth,createProduct);
 productRouter.get('/getProduct/:productId',auth,getProduct);
 productRouter.patch('/editproduct/:productId',auth,editProduct);

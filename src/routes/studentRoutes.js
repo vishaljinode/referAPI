@@ -6,11 +6,6 @@ const {signUpStudent,editStudentProfile,
     getStudentProfile,getAllStudentProfile,
     deleteStudent,getStudentProfileByuserId} = require('../controllers/studentController')
 
-
-studentRouter.get('/',(req,res)=>{
-    res.send("hello")
-})
-
 studentRouter.post('/signupstudent',signUpStudent)
 studentRouter.post('/editstudentprofile',auth,editStudentProfile)
 studentRouter.get('/getstudentprofile/:studentId',auth,getStudentProfile)

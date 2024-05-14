@@ -6,10 +6,14 @@ const Counter = userModels.counter;
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const SECRET_KEY = "myprojectapiforyou";
+const dotenv = require('dotenv')
+dotenv.config()
+const SECRET_KEY = process.env.SECRET_KEY
 const sendEmail = require("../utils/sendEmail");
 const studentModels = require("../models/studentModel");
 const Student = studentModels.student;
+
+
 
 //UserId Counter
 async function getNextSequence(name) {
@@ -163,7 +167,7 @@ const editStudentProfile = async (req, res) => {
     const currentUser = await User.findOne({ _id: currentUserId });
 
     // Find the user by email
-    const existingUser = await User.findOne({ email:email });
+    const existingUser = await User.findOne({ email: email });
 
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
@@ -281,15 +285,15 @@ const getAllStudentProfile = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    
+
 
     if (currentUser.role != "Admin") {
       return res.status(404).json({ error: "Only admin can access all user" });
     }
 
     // Find all active student profiles
-    const studentProfiles = await Student.find({ status: "Active" });
-   
+    const studentProfiles = await Student.find({ status: "Active" }).sort({ createdAt: -1 });
+
 
     if (!studentProfiles || studentProfiles.length === 0) {
       return res
@@ -304,7 +308,7 @@ const getAllStudentProfile = async (req, res) => {
     for (const studentProfile of studentProfiles) {
       // Find the user by student's userId
       const existingUser = await User.findById(studentProfile.userId);
-      
+
       if (!existingUser) {
         console.error(
           `User not found for student with userId: ${studentProfile.userId}`
@@ -312,7 +316,7 @@ const getAllStudentProfile = async (req, res) => {
         continue;
       }
 
-   
+
       const response = {
         user: {
           id: existingUser._id,
@@ -325,8 +329,8 @@ const getAllStudentProfile = async (req, res) => {
           standard: studentProfile.standard,
           rolno: studentProfile.rolno,
           marks: studentProfile.marks,
-          id : studentProfile._id
-         
+          id: studentProfile._id
+
         },
       };
 
@@ -334,9 +338,9 @@ const getAllStudentProfile = async (req, res) => {
     }
 
     const count = responseArray.length
-    const paginationData = responseArray.slice((pageSize*page),((pageSize*page) + pageSize))
+    const paginationData = responseArray.slice((pageSize * page), ((pageSize * page) + pageSize))
 
-    res.status(200).json({status : true ,users : paginationData , count : count});
+    res.status(200).json({ status: true, users: paginationData, count: count });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Something went wrong" });
@@ -353,7 +357,7 @@ const deleteStudent = async (req, res) => {
     if (!currentUser) {
       return res.status(404).json({ error: "User token not found" });
     }
-    if (currentUser.role !="Admin") {
+    if (currentUser.role != "Admin") {
       return res.status(401).json({ error: "Only admin can delete user" });
     }
 

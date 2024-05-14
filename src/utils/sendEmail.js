@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const nodemailer = require('nodemailer');
 
 const sendEmail = async ({ email, subject, message }) => {
@@ -13,18 +14,18 @@ const sendEmail = async ({ email, subject, message }) => {
 
   // Setup email data
   let mailOptions = {
-    from: '"Refer App" <vishaljinode@gmail.com>', 
-    to: email, 
-    subject: subject, 
-    text: message, 
-  
+    from: '"Refer App" <vishaljinode@gmail.com>',
+    to: email,
+    subject: subject,
+    text: message,
+
   };
 
   // Send mail with defined transport object
   let info = await transporter.sendMail(mailOptions);
 
-  console.log('Message sent: %s', info.messageId); 
-  
+  console.log('Message sent: %s', info.messageId);
+
   console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
   return info.accepted[0]
 

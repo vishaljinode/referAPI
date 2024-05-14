@@ -14,7 +14,7 @@ const transactionHistoryShema = mongoose.Schema({
     transactionAmount: {
         type: Number,
         required: true,
-    },   
+    },
     transactionDate: {
         type: Date,
         default: Date.now
@@ -53,12 +53,12 @@ const transactionsSchema = mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    note :{
-        type: String,        
+    note: {
+        type: String,
     }
-    
+
 }, { timestamps: true })
 
 
-module.exports.purchaseTransaction = mongoose.model("TransactionHistories",transactionHistoryShema)
-module.exports.transactions = mongoose.model("Transactions",transactionsSchema)
+module.exports.purchaseTransaction = mongoose.model("TransactionHistories", transactionHistoryShema)
+module.exports.transactions = mongoose.model("Transactions", transactionsSchema)

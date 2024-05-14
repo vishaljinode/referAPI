@@ -2,7 +2,6 @@ const multer = require('multer');
 const ProductModel = require('../models/productsModel');
 const path = require('path');
 const fs = require('fs');
-
 const Product = ProductModel.product;
 const ProductImage = ProductModel.productImage;
 const PurchasedProduct = ProductModel.purchasedProduct;
@@ -14,11 +13,11 @@ const User = userModels.users;
 
 
 const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         const uploadPath = path.resolve(__dirname, '../uploads/');  // Absolute path
         cb(null, uploadPath);
     },
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 });
@@ -38,25 +37,25 @@ const createProduct = async (req, res, next) => {
         }
 
         const { productName, details, price, stock } = req.body;
-        const userId = req.userId; 
-        
+        const userId = req.userId;
+
         try {
             const newImage = new ProductImage({
                 mediaUrl: req.file.path,
                 mediaType: req.file.mimetype
             });
             const savedImage = await newImage.save();
-    
+
             const newProduct = new Product({
                 productName,
                 details,
                 price,
                 stock,
-                productUploadedBy : userId,
+                productUploadedBy: userId,
                 productImage: savedImage._id
             });
             const savedProduct = await newProduct.save();
-    
+
             res.status(201).json(savedProduct);
         } catch (error) {
             res.status(500).send(error.message);
@@ -69,13 +68,13 @@ const getProduct = async (req, res, next) => {
     try {
         const productId = req.params.productId;
         // Fetch the product with the image details populated
-        const product = await Product.findById({_id : productId, status: "Active"}).populate('productImage');
+        const product = await Product.findById({ _id: productId, status: "Active" }).populate('productImage');
 
         if (!product) {
             return res.status(404).send('Product not found');
         }
 
-        res.status(200).json({status: true,product});
+        res.status(200).json({ status: true, product });
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -163,18 +162,19 @@ const getAllProduct = async (req, res) => {
     const pageSize = req.body.pageSize || 10;
     const page = req.body.page || 0;
     try {
-       
+
         // Fetch the product with the image details populated
-        const product = await Product.find({status: "Active"})
-        .populate('productImage')
-        .skip(page*pageSize).limit(pageSize);
+        const product = await Product.find({ status: "Active" })
+            .populate('productImage')
+            .sort({ createdAt: -1 })
+            .skip(page * pageSize).limit(pageSize);
 
         const count = await Product.countDocuments({ status: 'Active' });
 
         if (!product) {
             return res.status(404).send('Product not found');
         }
-        res.status(200).json({status : true, count,product});
+        res.status(200).json({ status: true, count, product });
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -182,7 +182,7 @@ const getAllProduct = async (req, res) => {
 
 
 const purchaseProduct = async (req, res) => {
-    const { productId, purchasedBy, transactionAmount, cardNo, expiryDate, cvv } = req.body;    
+    const { productId, purchasedBy, transactionAmount, cardNo, expiryDate, cvv } = req.body;
     // Check if all required fields are present
     if (!productId || !purchasedBy || !transactionAmount || !cardNo || !expiryDate || !cvv) {
         return res.status(400).json({ error: 'Required fields are missing' });
@@ -190,12 +190,12 @@ const purchaseProduct = async (req, res) => {
 
     try {
         // Check if product exists and is in stock
-        const currentProduct = await Product.findOne({ _id: productId });        
+        const currentProduct = await Product.findOne({ _id: productId });
         if (!currentProduct || currentProduct.stock === 0) {
             return res.status(404).json({ error: 'Product not found or out of stock' });
         }
 
-       
+
 
         // Create transaction record
         const newTransaction = new Transaction({
@@ -236,29 +236,29 @@ const purchaseProduct = async (req, res) => {
         );
 
         // Update Refer User Balance if exists
-        
-            const additionalAmount = transactionAmount * 0.05;
 
-            const referUser = await User.findOneAndUpdate(
-                { userId: currentUser.referrPersonId },
-                { $inc: { balance: additionalAmount } },
-                { new: true }
-            );
+        const additionalAmount = transactionAmount * 0.05;
 
-          const referUserId2 = await User.findOne({ userId: currentUser.referrPersonId });                   
-          const newTrans2 = new Transactions({
-                userId: referUserId2._id,
-                transactionAmount : additionalAmount,
-                transactionType: "credit",
-                note: `Amount credited for purchase product ${currentUser.username}`
-            });
-            await newTrans2.save();
-        
-            // Create purchased product record
-            const newPurchased = new PurchasedProduct({ productId, purchasedBy });
-            const savedPurchased = await newPurchased.save();
+        const referUser = await User.findOneAndUpdate(
+            { userId: currentUser.referrPersonId },
+            { $inc: { balance: additionalAmount } },
+            { new: true }
+        );
 
-            
+        const referUserId2 = await User.findOne({ userId: currentUser.referrPersonId });
+        const newTrans2 = new Transactions({
+            userId: referUserId2._id,
+            transactionAmount: additionalAmount,
+            transactionType: "credit",
+            note: `Amount credited for purchase product ${currentUser.username}`
+        });
+        await newTrans2.save();
+
+        // Create purchased product record
+        const newPurchased = new PurchasedProduct({ productId, purchasedBy });
+        const savedPurchased = await newPurchased.save();
+
+
         // Return success response
         res.status(201).json({ status: true, PurchasedProduct: savedPurchased });
     } catch (error) {
@@ -269,18 +269,18 @@ const purchaseProduct = async (req, res) => {
 
 const getAllPurchases = async (req, res) => {
     const currentUserId = req.userId;
-    if (!currentUserId) {     
+    if (!currentUserId) {
         return res.status(404).json({ error: 'currentUserId not found' })
     }
     const currentUser = await User.findOne({ _id: currentUserId });
-    
-    if (!currentUser) {     
+
+    if (!currentUser) {
         return res.status(404).json({ error: 'currentUser not found' })
     }
 
     if (currentUser.role != "Admin") {
         return res.status(404).json({ error: 'Only Adminn can access this' })
-        
+
     }
 
 
@@ -288,24 +288,25 @@ const getAllPurchases = async (req, res) => {
     const page = req.body.page || 0;
 
 
-    try {      
+    try {
         // Fetch the product with the image details populated
         const product = await PurchasedProduct.find({ status: "Active" })
-        .populate({
-            path: 'productId',
-            populate: {
-                path: 'productImage'
-            }
-        })
-        .populate('purchasedBy')
-        .skip(page*pageSize).limit(pageSize);
-        const count = await PurchasedProduct.countDocuments({purchasedBy : currentUserId, status: 'Active' });
+            .populate({
+                path: 'productId',
+                populate: {
+                    path: 'productImage'
+                }
+            })
+            .populate('purchasedBy')
+            .sort({ createdAt: -1 })
+            .skip(page * pageSize).limit(pageSize);
+        const count = await PurchasedProduct.countDocuments({ purchasedBy: currentUserId, status: 'Active' });
 
         if (!product) {
             return res.status(404).json({ error: 'Product not found' })
-            
+
         }
-        res.status(200).json({status : true, count,product});
+        res.status(200).json({ status: true, count, product });
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -315,32 +316,33 @@ const getPurchaseByid = async (req, res) => {
     const currentUserId = req.userId;
     if (!currentUserId) {
         return res.status(404).json({ error: 'currentUserId not found' })
-       
+
     }
     const pageSize = req.body.pageSize || 10;
     const page = req.body.page || 0;
 
 
-    try {      
+    try {
         // Fetch the product with the image details populated
         const product = await PurchasedProduct.find({ status: "Active" })
-        .populate({
-            path: 'productId',
-            populate: {
-                path: 'productImage'
-            }
-        })
-        .populate('purchasedBy')
-        .skip(page*pageSize).limit(pageSize);
-        const count = await PurchasedProduct.countDocuments({purchasedBy : currentUserId, status: 'Active' });
+            .populate({
+                path: 'productId',
+                populate: {
+                    path: 'productImage'
+                }
+            })
+            .populate('purchasedBy')
+            .sort({ createdAt: -1 })
+            .skip(page * pageSize).limit(pageSize);
+        const count = await PurchasedProduct.countDocuments({ purchasedBy: currentUserId, status: 'Active' });
 
         if (!product) {
             return res.status(404).json({ error: 'Product not found' })
         }
-        res.status(200).json({status : true, count,product});
+        res.status(200).json({ status: true, count, product });
     } catch (error) {
         res.status(500).send(error.message);
     }
 };
 
-module.exports = {getAllPurchases,getPurchaseByid,purchaseProduct, createProduct ,getProduct,editProduct,deleteProduct,getAllProduct };
+module.exports = { getAllPurchases, getPurchaseByid, purchaseProduct, createProduct, getProduct, editProduct, deleteProduct, getAllProduct };
